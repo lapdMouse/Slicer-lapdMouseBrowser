@@ -10,7 +10,7 @@ set(EXTENSION_HOMEPAGE "http://slicer.org/slicerWiki/index.php/Documentation/Nig
 set(EXTENSION_CATEGORY "Informatics")
 set(EXTENSION_CONTRIBUTORS "Christian Bauer (Univeristy of Iowa)")
 set(EXTENSION_DESCRIPTION "Connect to the lapdMouse archive, browse the collection, download and visualize data files in 3D Slicer.")
-set(EXTENSION_ICONURL "https://www.slicer.org/w/images/a/aa/LapdMouseBrowserIcon.png")
+set(EXTENSION_ICONURL "https://raw.githubusercontent.com/lapdMouse/lapdMouseBrowser/master/lapdMouseBrowser.png")
 set(EXTENSION_SCREENSHOTURLS "https://www.slicer.org/w/images/b/b2/LapdMouseDBBrowserWindow.png https://www.slicer.org/w/images/6/67/LapdMouseStandardFiles.png https://www.slicer.org/w/images/e/ed/LapdMouseNearAciniTree.png")
 set(EXTENSION_DEPENDS "NA") # Specified as a space separated string, a list or 'NA' if any
 
