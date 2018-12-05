@@ -10,8 +10,7 @@ set(MODULE_PYTHON_RESOURCES
   Resources/Icons/${MODULE_NAME}.png
   Resources/Icons/download.png
   Resources/Icons/stored.png
-  Resources/Icons/uiowalogo.png
-  Resources/Icons/uwashlogo.png
+  Resources/Icons/lapdMouseDBBrowser.png
   )
 
 #-----------------------------------------------------------------------------
