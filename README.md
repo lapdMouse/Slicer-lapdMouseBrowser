@@ -32,13 +32,9 @@ for your operating system. We recommend the use of the latest stable release of
 3D Slicer. **lapdMouseBrowser** has been developed for Slicer 4.10.0 and tested
 on Windows 7, Ubuntu 16.04, and MacOS Sierra.
 
-**Install lapdMouseBrowser**: Go to <https://github.com/lapdMouse/lapdMouseBrowser>
-and download **lapdMouseBrowser**, uncompress the package. Start 3D Slicer, from
-the menu bar select `Edit`, `Application Settings`, `Modules`. In section
-`Additional module paths`, `Add` the paths to the directories
-`lapdMouseDBBrowser` and `lapdMouseVisualizer` in the uncompressed
-lapdMouseBrowser folder. Click `Ok` and `Restart`. After restart the
-**lapdMouseBrowser** is available in 3D Slicer.
+**Install lapdMouseBrowser**: Start 3D Slicer and select from the menu `View`
+the `Extension Manager` and `Install Extensions`. Then search for
+`lapdMouseBrowser`. Select it for installation and `restart` 3D Slicer.
 
 ## Usage
 
