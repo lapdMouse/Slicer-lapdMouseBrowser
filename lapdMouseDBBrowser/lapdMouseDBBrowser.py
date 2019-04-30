@@ -317,11 +317,11 @@ class lapdMouseBrowserWindow(qt.QMainWindow):
     if datasetId==-1: return
     datasetname = self.datasets[datasetId]
     selectedFiles = []
-    defaultFiles = ['AutofluorescentSub4.mha','AerosolDeconvSub4.mha', \
+    defaultFiles = ['AutofluorescentSub4.mha','AerosolNormalizedSub4.mha', \
       'Lobes.nrrd','AirwayOutlets.vtk', 'AirwayWallDeposition.vtk']
     for df in defaultFiles:
       for f in self.listFilesForDataset(datasetname):
-        if f['name'].find(df)>0:
+        if f['name'].find(df)!=-1:
           selectedFiles.append(f['name'])
     self.downloadFiles(datasetname, selectedFiles)
     self.updateForm()
@@ -393,11 +393,11 @@ class lapdMouseBrowserWindow(qt.QMainWindow):
     if datasetId==-1: return
     datasetname = self.datasets[datasetId]
     selectedFiles = []
-    defaultFiles = ['AutofluorescentSub4.mha','AerosolDeconvSub4.mha', \
+    defaultFiles = ['AutofluorescentSub4.mha','AerosolNormalizedSub4.mha', \
       'Lobes.nrrd','AirwayOutlets.vtk', 'AirwayWallDeposition.vtk']
     for df in defaultFiles:
       for f in self.listFilesForDataset(datasetname):
-        if f['name'].find(df)>0:
+        if f['name'].find(df)!=-1:
           selectedFiles.append(f['name'])
     if self.downloadFiles(datasetname, selectedFiles):
       self.updateForm()
@@ -455,13 +455,14 @@ class lapdMouseBrowserWindow(qt.QMainWindow):
     node.CreateDefaultDisplayNodes()
     nd = node.GetDisplayNode()
     
-    if (str(os.path.basename(filename)).find('Aerosol')>0):
+    if (str(os.path.basename(filename)).find('Aerosol')!=-1):
       colorLUT = slicer.util.getFirstNodeByClassByName('vtkMRMLColorTableNode','Red')
       if colorLUT: nd.SetAndObserveColorNodeID(colorLUT.GetID())
       nd.SetAutoWindowLevel(False)
-      nd.SetWindowLevel(1000,500)
+      if (str(os.path.basename(filename)).find('Normalized')!=-1): nd.SetWindowLevel(10,5)
+      else: nd.SetWindowLevel(1000,500)
       
-    if (str(os.path.basename(filename)).find('Autofluorescent')>0):
+    if (str(os.path.basename(filename)).find('Autofluorescent')!=-1):
       colorLUT = slicer.util.getFirstNodeByClassByName('vtkMRMLColorTableNode','Green')
       if colorLUT: nd.SetAndObserveColorNodeID(colorLUT.GetID())
       nd.SetAutoWindowLevel(False)
@@ -476,7 +477,7 @@ class lapdMouseBrowserWindow(qt.QMainWindow):
     node = nodes.values()[len(nodes.values())-1]
     
     colorLUT = None
-    if (str(os.path.basename(filename)).find('Lobes.nrrd')>0):
+    if (str(os.path.basename(filename)).find('Lobes.nrrd')!=-1):
       colorLUT = slicer.util.getFirstNodeByClassByName('vtkMRMLColorTableNode','lapdMouseLobes')
     else:
       colorLUT = slicer.util.getFirstNodeByClassByName('vtkMRMLColorTableNode','lapdMouseSegments')
@@ -514,26 +515,26 @@ class lapdMouseBrowserWindow(qt.QMainWindow):
     if node.GetPolyData().GetPointData().GetNumberOfArrays()>0:
       nd.SetActiveScalarName(node.GetPolyData().GetPointData().GetArrayName(0))
     
-    if (str(os.path.basename(filename)).find('AirwayWallDeposition')>0):   
+    if (str(os.path.basename(filename)).find('AirwayWallDeposition')!=-1):   
       colorLUT = slicer.util.getFirstNodeByClassByName('vtkMRMLColorTableNode','Warm1')
       if colorLUT: nd.SetAndObserveColorNodeID(colorLUT.GetID())
       nd.SetScalarRangeFlag(slicer.vtkMRMLDisplayNode.UseManualScalarRange)
       nd.SetAutoScalarRange(False)
-      nd.SetScalarRange(0,1000)
+      nd.SetScalarRange(0,10)
     
-    if (str(os.path.basename(filename)).find('AirwayWall.vtk')>0):      
+    if (str(os.path.basename(filename)).find('AirwayWall.vtk')!=-1):      
       colorLUT = slicer.util.getFirstNodeByClassByName('vtkMRMLColorTableNode','BlueRed')
       if colorLUT: nd.SetAndObserveColorNodeID(colorLUT.GetID())
       nd.SetScalarRangeFlag(slicer.vtkMRMLDisplayNode.UseManualScalarRange)
       nd.SetAutoScalarRange(False)
       nd.SetScalarRange(0,1)
     
-    if (str(os.path.basename(filename)).find('AirwaySegments')>0):
+    if (str(os.path.basename(filename)).find('AirwaySegments')!=-1):
       colorLUT = slicer.util.getFirstNodeByClassByName('vtkMRMLColorTableNode','lapdMouseSegments')
       if colorLUT: nd.SetAndObserveColorNodeID(colorLUT.GetID())
       nd.SetScalarRangeFlag(slicer.vtkMRMLDisplayNode.UseColorNodeScalarRange)
     
-    if (str(os.path.basename(filename)).find('AirwayOutlets')>0):
+    if (str(os.path.basename(filename)).find('AirwayOutlets')!=-1):
       colorLUT = slicer.util.getFirstNodeByClassByName('vtkMRMLColorTableNode','lapdMouseOutlets')
       if colorLUT: nd.SetAndObserveColorNodeID(colorLUT.GetID())
       nd.SetScalarRangeFlag(slicer.vtkMRMLDisplayNode.UseColorNodeScalarRange)
@@ -557,7 +558,7 @@ class lapdMouseBrowserWindow(qt.QMainWindow):
     slicer.mrmlScene.AddNode(model)
     
     # change color
-    if (str(os.path.basename(filename)).find('AirwayTree')>0):
+    if (str(os.path.basename(filename)).find('AirwayTree')!=-1):
       display = model.GetDisplayNode()
       display.SetActiveScalarName('BranchLabel')
       colorLUT = slicer.util.getFirstNodeByClassByName('vtkMRMLColorTableNode','Rainbow')
