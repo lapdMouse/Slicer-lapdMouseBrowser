@@ -147,7 +147,7 @@ class lapdMouseBrowserWindow(qt.QMainWindow):
     self.workingDirectory = None
     self.isEditing = False
     self.datasets = []
-    self.remoteFolderId = '1-_CeHHmk94y_08KRzexUhTdtdFMxMs_8'
+    self.remoteFolderId = '0B8oknMRvtleaRXFkcGhZaFd0eUU'
     self.localCashFolder = os.path.join(os.path.expanduser("~"),'data','R01_lapdmousetest')
     self.projectURL='https://lapdmouse.iibi.uiowa.edu'
     self.setupWindow()
