@@ -174,7 +174,7 @@ class lapdMouseBrowserWindow(qt.QMainWindow):
     self.bannerTextBrowser.setMaximumHeight(120)
     text = "<h1>lapdMouse Data Archive Browser</h1>"
     text += "The lapdMouse data archive contains anatomically derived lung models and aerosol deposition measurements of mice for modeling and computational toxicology in mice."
-    text += " For more details about available datasets, data representation, other software, and support, please visit the <a href=\""+self.projectURL+"\">lapdMouse project</a>"
+    text += " For more details about available datasets, data representation, other software, and support, please visit the <a href=\"https://doi.org/10.25820/9arg-9w56\">lapdMouse archive</a>"
     text += "<br />This work was supported in part by NIH project R01ES023863."    
     self.bannerTextBrowser.html=text
     self.banner.layout().addWidget(self.bannerTextBrowser,0,1)
@@ -622,7 +622,7 @@ class lapdMouseDBBrowser(ScriptedLoadableModule):
     self.parent.contributors = ["Christian Bauer (Univeristy of Iowa)"] # replace with "Firstname Lastname (Organization)"
     self.parent.helpText = """
     Tool for accessing and viewing data from the of lapdMouse project data archive. For more details, visit the
-    <a href="https://lapdmouse.iibi.uiowa.edu">lapdMouse project</a>.
+    <a href="https://doi.org/10.25820/9arg-9w56">lapdMouse project</a>.
     """
     self.parent.acknowledgementText = """
     This work was supported in part by NIH project R01ES023863.

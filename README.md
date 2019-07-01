@@ -2,9 +2,9 @@
 
 **lapdMouseBrowser** is an extension for [3D Slicer](https://www.slicer.org) to
 download and visualize files from the
-[lapdMouse data archive](https://lapdmouse.iibi.uiowa.edu/download). For more
-information about the lapdMouse project and available data visit
-<https://lapdmouse.iibi.uiowa.edu>. More specifically, **lapdMouseBrowser** allows
+[Lung anatomy + particle deposition (lapd) mouse archive](https://doi.org/10.25820/9arg-9w56).
+For more information about the lapdMouse project and available data visit
+<https://doi.org/10.25820/9arg-9w56>. More specifically, **lapdMouseBrowser** allows
 the user to browse through the datasets in the lapdMouse data archive, download them
 to the local drive, and load them in 3D Slicer. Advantages include:
 
@@ -154,5 +154,7 @@ This work was supported in part by NIH project R01ES023863.
 
 ## Support
 
-For support and further information please visit <https://lapdmouse.iibi.uiowa.edu>
-or contact us via <https://lapdmouse.iibi.uiowa.edu/Contact>
+For support and further information please visit the
+"Lung anatomy + particle deposition (lapd) mouse archive"
+at <https://doi.org/10.25820/9arg-9w56>.
+
