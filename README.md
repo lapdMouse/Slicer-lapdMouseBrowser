@@ -29,8 +29,7 @@ all major operating systems.
 **Prerequisite - 3D Slicer**: If 3D Slicer has not yet been installed on your system,
 go to <https://download.slicer.org>, download and install a version suitable
 for your operating system. We recommend the use of the latest stable release of
-3D Slicer. **lapdMouseBrowser** has been developed for Slicer 4.10.0 and tested
-on Windows 7, Ubuntu 16.04, and MacOS Sierra.
+3D Slicer. **lapdMouseBrowser** has been developed for Slicer 5.6.1.
 
 **Install lapdMouseBrowser**: Start 3D Slicer and select from the menu `View`
 the `Extension Manager` and `Install Extensions`. Then search for
@@ -40,12 +39,13 @@ the `Extension Manager` and `Install Extensions`. Then search for
 
 Start 3D Slicer with the installed **lapdMouseBrowser** extension.
 For users not familiar with 3D Slicer, we refer to the
-[3D Slicer user documentation](https://www.slicer.org/wiki/Documentation/4.8)
-and its [Getting started](https://www.slicer.org/wiki/New_users) section.
-From 3D Slicer's Module selector (drop down menu `Modules:` in tool bar) select
-`lapdMouse`, `lapdMouseDBBrowser`. The **lapdMouse Data Archive Browser** window opens.
-On the left it lists all datasets available in the data archive, on the right it
-shows a list of files and actions associated with a selected dataset.
+[3D Slicer user documentation](https://slicer.readthedocs.io/en/latest/index.html)
+and its [Getting started](https://slicer.readthedocs.io/en/latest/user_guide/getting_started.html)
+section.  From 3D Slicer's Module selector (drop down menu `Modules:` in
+tool bar) select `lapdMouse`, `lapdMouseDBBrowser`. The **lapdMouse Data
+Archive Browser** window opens.  On the left it lists all datasets
+available in the data archive, on the right it shows a list of files and
+actions associated with a selected dataset.
 
 The following subsections will explain how to:
 
@@ -70,13 +70,16 @@ in Slicer`.
 
 The "standard" file selection includes files commonly used:
 
-  * AerosolSub4.mha (aerosol deposition image volume)
-  * AutofluorescentSub4.mha (autofluorescent image volume showing anatomical
+  * `AerosolSub4.mha` (aerosol deposition image volume)
+  * `AutofluorescentSub4.mha` (autofluorescent image volume showing anatomical
     structures)
-  * Lobes.nrrd (Labelmap for lung lobes)
-  * AirwayOutlets.vtk (Airway mesh with label assigned to outlets)
-  * AirwayWallDeposition.vtk (aerosol deposition measurements near the airway
+  * `Lobes.nrrd` (Labelmap for lung lobes)
+  * `AirwayOutlets.vtk` (Airway mesh with label assigned to outlets)
+  * `AirwayWallDeposition.vtk` (aerosol deposition measurements near the airway
     wall)
+
+![lapdMouseBrowser main
+window](https://raw.githubusercontent.com/lapdMouse/Slicer-lapdMouseBrowser/master/Screenshots/LapdMouseDBBrowserWindow.png)
 
 If the files have not yet been downloaded, **lapdMouseBrowser** will display the
 total size of the files and ask the user to confirm the download. **Note:** Some
@@ -92,6 +95,8 @@ aerosol deposition image and the airway wall deposition measurements mesh, and
 an outline of the lung lobes. The visualization parameters and displayed models
 can then be modified using 3D Slicer's standard functionality.
 
+![Loaded standard file selection](https://raw.githubusercontent.com/lapdMouse/Slicer-lapdMouseBrowser/master/Screenshots/LapdMouseStandardFiles.png)
+
 ### Download and visualize a custom set of files
 
 If you want to download additional (or other) files for a dataset, select the
@@ -100,13 +105,15 @@ file names from the list (ust `Ctrl`-key to select multiple at once), and click
 the files and ask the user to confirm the download. After download, they get can
 get loaded in 3D Slicer using `load selected files`.
 
+![Visualized airway tree structure and near acini compartment deposition](https://raw.githubusercontent.com/lapdMouse/Slicer-lapdMouseBrowser/master/Screenshots/LapdMouseNearAciniTree.png)
+
 ### Visualization of files not natively supported by 3D Slicer
 
 **lapdMouseBrowser** includes **lapdMouseVisualizer**, a 3D Slicer module to
 create mesh models for visualization of lapdMouse files not natively support by
 3D Slicer:
-  * airway tree structure with branch labeling stored as \*.meta files
-  * aerosol deposition measurement tables stored as \*.csv files
+  * airway tree structure with branch labeling stored as `\*.meta` files
+  * aerosol deposition measurement tables stored as `\*.csv` files
 
 To create visualizations of these files, select from the  3D Slicer's Module
 selector, `lapdMouse`, `lapdMouseVisualizer`. Then, under Section `Tree Structure`
@@ -120,14 +127,15 @@ are rendered as spheres with a color coding of the measurement value.
 ## Note on 3D Slicer's coordinate systems
 One of the issues while dealing with volumetric images and derived models are
 the differences between the coordinate systems. See
-https://www.slicer.org/wiki/Coordinate_systems for an explanation.
+https://slicer.readthedocs.io/en/latest/user_guide/coordinate_systems.html
+for an explanation.
 
 All lapdMouse data (images, meshes, tree structure, etc.) were generated with
 [Insight Segmentation and Registration Toolkit](https://itk.org) (ITK) and use
 an **LPS** coordinate system.
 
 3D Slicer however, loads raster images assuming an LPS coordinate system and
-models assuming an RAS coordinate system; see [Slicer File Formats](https://www.slicer.org/wiki/Documentation/4.4/SlicerApplication/SupportedDataFormat).
+models assuming an RAS coordinate system; see [Slicer File Formats](https://slicer.readthedocs.io/en/latest/user_guide/data_loading_and_saving.html).
 As a result, when loading images and meshes 3D Slicer's `Add data`, they seem
 to not match.
 To fix this manually, one needs to transform either the images or the models.
@@ -146,7 +154,7 @@ models.
 
 ## License
 
-**lapdMouseBrowser** is distributed under [3-clause BSD license](LICENSE.txt).
+**lapdMouseBrowser** is distributed under [3-clause BSD license](License.txt).
 
 ## Acknowledgements
 
