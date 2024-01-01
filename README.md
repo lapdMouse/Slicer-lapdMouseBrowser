@@ -112,8 +112,8 @@ get loaded in 3D Slicer using `load selected files`.
 **lapdMouseBrowser** includes **lapdMouseVisualizer**, a 3D Slicer module to
 create mesh models for visualization of lapdMouse files not natively support by
 3D Slicer:
-  * airway tree structure with branch labeling stored as `\*.meta` files
-  * aerosol deposition measurement tables stored as `\*.csv` files
+  * airway tree structure with branch labeling stored as `*.meta` files
+  * aerosol deposition measurement tables stored as `*.csv` files
 
 To create visualizations of these files, select from the  3D Slicer's Module
 selector, `lapdMouse`, `lapdMouseVisualizer`. Then, under Section `Tree Structure`
@@ -141,11 +141,13 @@ to not match.
 To fix this manually, one needs to transform either the images or the models.
 After loading the datasets, go to Slicer's `Transforms` module, and select 
 from `Active Transform` `Create new Linear Transform`. Specify the
-`Transformation Matrix` to flip the data in the first two dimension:
--1  0  0  0
- 0 -1  0  0
- 0  0  1  0
- 0  0  0  1
+`Transformation Matrix` to flip the data in the first two dimensions:
+
+    -1  0  0  0
+     0 -1  0  0
+     0  0  1  0
+     0  0  0  1
+
 Then, in Section `Apply transform` move the models from `Transformable` to
 `Transformed`. Then loaded images and models are aligned.
 
