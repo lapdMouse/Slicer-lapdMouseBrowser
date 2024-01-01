@@ -5,151 +5,204 @@ from slicer.ScriptedLoadableModule import *
 import logging
 import json
 import sys
-import urllib, urllib2
+import urllib
+import datetime
+import time, sys, ssl, urllib.request, urllib.error
 
-class SharedGDriveUtils():
+class lapdMouseDBUtil():
 
-  def __init__(self, SharedGDriveFolderId):
-    self.gdriveRoot = SharedGDriveFolderId    
-  
-  def canAccess(self):
+  def __init__(self, remoteFolderUrl):
+    self.gdriveURL = remoteFolderUrl
+    if 'lapdMouseDBBrowser' in slicer.util.moduleNames():
+      self.modulePath = slicer.modules.lapdmousedbbrowser.path.replace("lapdMouseDBBrowser.py","")
+    else:
+      self.modulePath = '.'
+
+  def _canAccess(self):
+    # Create a secure SSL context
+    ctx = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
+    ctx.options |= 0x4  # OP_LEGACY_SERVER_CONNECT
+
     try:
-      self._listFolderFromGoogleDrive(self.gdriveRoot,0)
-      return True
-    except:
+      httpCode = urllib.request.urlopen(self.gdriveURL+'m01/MD5SUMS',context=ctx).getcode()
+      if (httpCode == 200):
+        return True
+      else:
+        print(f"Unexpected HTTP error ({httpCode}.")
+        return False
+    except urllib.error.HTTPError as e:
+      print('The server couldn\'t fulfill the request.')
+      print('Error code: ', e.code)
       return False
-        
-  def listDirectory(self, dirname='',depth=0):
-    try:
-      if dirname=='' or dirname=='.': return self._listFolderFromGoogleDrive(self.gdriveRoot,depth)
-      directoryId = self._getResourceId(self.gdriveRoot, dirname)
-      if directoryId==None: return []
-      return self._listFolderFromGoogleDrive(directoryId, depth)
+    except urllib.error.URLError as e:
+      print('We failed to reach a server.')
+      print('Reason: ', e.reason)
+      return False
     except:
-      return []
-  
-  def downloadFile(self, src, dst):
-    srcId = self._getResourceId(self.gdriveRoot, src)
-    if srcId==None: return None
-    if not os.path.exists(os.path.dirname(dst)): os.makedirs(os.path.dirname(dst))
-    self._downloadFileFromGoogleDrive(srcId, dst)
+      print("Unexpected error:", sys.exc_info()[0])
+      return False
 
-  def _downloadFileFromGoogleDrive(self,file_id, destination):  
-    queryParameters = {"export":"download", "id":file_id}
-    queryParameters =  dict((k, v) for k, v in queryParameters.iteritems() if v)
-    queryString = "?%s" % urllib.urlencode(queryParameters)
-    URL = "https://drive.google.com/uc?export=download"  
-    requestUrl = URL + queryString
-    request = urllib2.Request(requestUrl)
-    response = urllib2.urlopen(request)
+  def listDirectory(self, dirname='',depth=0):
+    return self._listFolderRemote(dirname, depth)
+    
+  def downloadFile(self, src, dst):
+    if not os.path.exists(os.path.dirname(dst)):
+      os.makedirs(os.path.dirname(dst))
+    self._downloadFileFromRemote(src, dst)
+
+  def _downloadFileFromRemote(self, src, destination):
+    requestUrl = self.gdriveURL + src
+    request = urllib.request.Request(requestUrl)
+    response = urllib.request.urlopen(request)
     self._downloadURLStreaming(response, destination)
-    cookie = response.headers.get('Set-Cookie')
-    if os.stat(destination).st_size<10000:
-      confirmationURL = self._getConfirmationURL(destination)
-      if confirmationURL:
-        confirmationURL = 'https://drive.google.com'+confirmationURL.replace('&amp;','&')
-        req2 = urllib2.Request(confirmationURL)
-        req2.add_header('cookie', cookie)
-        response = urllib2.urlopen(req2)
-        self._downloadURLStreaming(response, destination)
-  
+
   def _downloadURLStreaming(self,response,destination):
-    slicer.app.processEvents()
-    import time
-    t0 = time.time()
     if response.getcode() == 200:
       destinationFile = open(destination, "wb")
       bufferSize = 1024*1024
-      print 'Downloading ',
-      while 1:
+      while True:
         buffer = response.read(bufferSize)
-        slicer.app.processEvents()
-        if not buffer: break
+        if not buffer:
+          break
         destinationFile.write(buffer)
       destinationFile.close()
-      print '... [DONE]'
-    t1 = time.time()
-    print 'time for downloading '+str(t1-t0)+' seconds'
-    
-  def _getConfirmationURL(self,destination):
-    with open(destination) as f:
-      for line in f:        
-        starttoken='/uc?export=download&amp;'
-        start = line.find(starttoken)
-        if start!=-1:
-          line = line[start:]
-          end = line.find('">')
-          value = line[0:end]
-          return value.decode('string_escape')
-    return None
-                   
-  def _listFolderFromGoogleDrive(self,folder_id,depth=0):
-    URL = "https://drive.google.com/drive/folders/"+folder_id+"?usp=sharing"
-    request = urllib2.Request(URL)
-    response = urllib2.urlopen(request)
-    if response.getcode()!=200:
-      print ('Error accessing resource')
-      return
-    jsondata = self._GetDriveIvd(response)
-    jsondata = json.loads(jsondata)
-    dirlist = jsondata[0]
+
+  def _listFolderRemote(self,dirname,depth=0):
+    # Read file with file names and metadata
+    try:
+      with open(os.path.join(self.modulePath,'allfiles.json')) as infile:
+        data = infile.read()
+      allcontent = json.loads(data)
+    except:
+      return []
+
     dircontent = []
-    if dirlist is not None:
-      for item in dirlist:
-        identifier = item[0]
-        name = item[2]
-        ftype = item[3]
-        fsize = item[13]
-        isFolder = ftype=='application/vnd.google-apps.folder'
-        dircontent.append({'name':name, 'id':identifier, 'type': ftype, 'isFolder':isFolder, 'size':fsize})
-        if isFolder and depth>0:
-          subdir = self._listFolderFromGoogleDrive(identifier,depth-1)
-          if subdir is not None:
-            for sub in subdir:
-              subname = os.path.join(name, sub['name'])
-              dircontent.append({'name':subname, 'id':sub['id'], 'type': sub['type'], 'isFolder':sub['isFolder'], 'size':sub['size']})
+    for oneFile in allcontent:
+      if (dirname == '.' or os.path.commonprefix([dirname,oneFile['name']]) == dirname):
+        remainingPath = oneFile['name'][len(dirname)+1:]
+        if (remainingPath.count('/') <= depth):
+          oneFile['name'] = os.path.basename(oneFile['name'])
+          dircontent.append(oneFile)
     return dircontent
-    
+
   def _splitPath(self, p):
     a,b = os.path.split(p)
-    return (self._splitPath(a) if len(a) and len(b) else []) + [b]  
-    
-  def _getResourceId(self, folder_id, relativePath):
-    pathParts = self._splitPath(relativePath)
-    finalNode = len(pathParts)==1
-    currentName = pathParts[0]
-    dircontent = self._listFolderFromGoogleDrive(folder_id)
-    for d in dircontent:
-      if d['name']==currentName:
-        if finalNode: return d['id']
-        else:
-          remainingPath = pathParts[1]
-          for p in pathParts[2:]: remainingPath = os.path.join(remainingPath, p)      
-          return self._getResourceId(d['id'], remainingPath)
+    return (self._splitPath(a) if len(a) and len(b) else []) + [b]
+
+def humanReadableSize(size):
+  if size==None:
+    return ""
+  sizeString = "%.1f B"%size
+  if (size>pow(1024.0,1)):
+    sizeString="%.1f KB"%(size/pow(1024.0,1))
+  if (size>pow(1024.0,2)):
+    sizeString="%.1f MB"%(size/pow(1024.0,2))
+  if (size>pow(1024.0,3)):
+    sizeString="%.1f GB"%(size/pow(1024.0,3))
+  if (size>pow(1024.0,4)):
+    sizeString="%.1f TB"%(size/pow(1024.0,4))
+  return sizeString
+
+def humanReadableTime(seconds):
+  return time.strftime("%H:%M:%S", time.gmtime(seconds))
+
+def getStatus(item):
+  remoteSize = item['size']
+  remoteModificationTime = item['modificationTimestamp']/1000
+  realPath = os.path.realpath(os.path.expanduser(item['localName']))
+  status = 'require download'
+  if os.path.exists(realPath):
+    localModificationTime = os.path.getmtime(realPath)
+    status = 'downloaded'
+    if not item['isFolder']:
+      localSize = os.path.getsize(realPath)
+      if remoteSize!=localSize or \
+        remoteModificationTime>localModificationTime:
+        status = 'require update'
+  return status
+
+def summarizeItems(items):
+  summaryString = ''
+  remoteFiles = items
+  summaryString += 'Matching files/folders: total='+str(len(remoteFiles))
+  if len(remoteFiles)>0:
+    summaryString+='('+humanReadableSize(sum(i['size'] for i in remoteFiles))+')'
+  filesAlreadyDownloaded = [i for i in remoteFiles if i['status']=='downloaded']
+  summaryString += ', downloaded='+str(len(filesAlreadyDownloaded))
+  if len(filesAlreadyDownloaded)>0:
+    summaryString+='('+humanReadableSize(sum(i['size'] for i in filesAlreadyDownloaded))+')'
+  filesForDownload = [i for i in remoteFiles if i['status']=='require download']
+  summaryString += ', require download='+str(len(filesForDownload))
+  if len(filesForDownload)>0:
+    summaryString+='('+humanReadableSize(sum(i['size'] for i in filesForDownload))+')'
+  filesOutOfDate = [i for i in remoteFiles if i['status']=='require update']
+  summaryString += ', require update='+str(len(filesOutOfDate))
+  if len(filesOutOfDate)>0:
+    summaryString+='('+humanReadableSize(sum(i['size'] for i in filesOutOfDate))+')'
+  print(summaryString)
+
+def listItem(item):
+  remoteName = item['remoteName'] 
+  localName = item['localName']
+  message = remoteName
+  if item['isFolder']:
+    message+=' -> '+localName+' (folder)'
+  else:
+    message+=' -> '+localName+' ('+item['status']+'; '+humanReadableSize(item['size'])+')'
+  print(message)
+
+def downloadItem(item, db):
+  listItem(item)
+  remoteName = item['remoteName']
+  localName = item['localName']
+  realPath = os.path.realpath(os.path.expanduser(localName))
+  isFolder = item['isFolder']
+  if os.path.exists(realPath) and os.path.isfile(realPath):
+    os.remove(realPath)
+  if isFolder and not(os.path.exists(realPath)):
+    os.makedirs(realPath)
+    return
+  if not isFolder and not(os.path.exists(os.path.dirname(realPath))):
+    os.makedirs(os.path.dirname(realPath))
+
+  sys.stdout.write('  Downloading ...')
+  sys.stdout.flush()
+  t0 = time.time()
+  try:
+    db.downloadFile(remoteName, realPath)
+  except:
+    print("Unexpected error:", sys.exc_info()[0])
+    if os.path.exists(realPath) and os.path.isfile(realPath):
+      os.remove(realPath)
+  t1 = time.time()
+  downloadSucceeded = os.path.exists(realPath)
+  sys.stdout.write( ( '[DONE]' if downloadSucceeded else ' [ERROR]')+' time: '+time.strftime("%M:%S", time.gmtime(t1-t0))+'(mm:ss)\n')
+  if not downloadSucceeded:
+    return 'ERROR: download failed for file: '+localName
+  else:
     return None
 
-  def _GetDriveIvd(self,response):
-    for line in response:
-      starttoken='window[\'_DRIVE_ivd\'] = \''
-      start = line.find(starttoken)
-      if start!=-1:
-        line = line[start+len(starttoken):]
-        end = line.find('\'')
-        value = line[0:end]
-        return value.decode('string_escape')
-    return None
+def testDBAccess(db):
+  serverStatus = 'unknown'
+  if lapdMouseDBUtil._canAccess():
+    serverStatus = 'available'
+  else:
+    serverStatus = 'unavailable'
+  print('DB access status: '+serverStatus)
+  return True if serverStatus=='available' else False
+
 
 class lapdMouseBrowserWindow(qt.QMainWindow):
 
   def __init__(self, parent=None):
-    super(lapdMouseBrowserWindow, self).__init__(parent)
+    super().__init__(parent)
     self.table = None
     self.workingDirectory = None
     self.isEditing = False
     self.datasets = []
-    self.remoteFolderId = '0B8oknMRvtleaRXFkcGhZaFd0eUU'
-    self.localCashFolder = os.path.join(os.path.expanduser("~"),'data','R01_lapdmousetest')
-    self.projectURL='https://lapdmouse.iibi.uiowa.edu'
+    self.remoteFolderUrl = 'https://cebs-ext.niehs.nih.gov/cahs/file/download/lapd/'
+    self.localCacheFolder = os.path.join(os.path.expanduser("~"),'Documents','data','lapdMouseTest')
+    self.projectURL='https://lapdmouse.iibi.uiowa.edu' # TODO: Change this?
     self.setupWindow()
 
   def setupWindow(self):
@@ -244,10 +297,10 @@ class lapdMouseBrowserWindow(qt.QMainWindow):
     self.setCentralWidget(splitView)
     
   def load(self):
-    self.datasets = [d['name'] for d in SharedGDriveUtils(self.remoteFolderId).listDirectory() if d["isFolder"]==True]
-    if os.path.exists(self.localCashFolder):
-      localFolders = [d for d in os.listdir(self.localCashFolder) if \
-        os.path.isdir(os.path.join(self.localCashFolder,d))]
+    self.datasets = [d['name'] for d in lapdMouseDBUtil(self.remoteFolderUrl).listDirectory() if d["isFolder"]==True]
+    if os.path.exists(self.localCacheFolder):
+      localFolders = [d for d in os.listdir(self.localCacheFolder) if \
+        os.path.isdir(os.path.join(self.localCacheFolder,d))]
       self.datasets = list(set(self.datasets).union(set(localFolders)))
     self.datasets.sort()
     self.updateTable()
@@ -281,6 +334,7 @@ class lapdMouseBrowserWindow(qt.QMainWindow):
       pass
     datasetname = self.datasets[datasetId]
     self.customFormName.text = datasetname
+    # TODO: Change this URL to PDF link or remove entirely
     url = self.projectURL+'/ViewMD/index.html?src=../resources/db_info/'+datasetname+'_Info.md'
     self.customFormDatasetInfo.text='<a href=\"'+url+'\">info</a>'
     datasetFiles = self.listFilesForDataset(datasetname)    
@@ -289,7 +343,7 @@ class lapdMouseBrowserWindow(qt.QMainWindow):
       fname = datasetFiles[i]["name"]
       fsize = datasetFiles[i]["size"]
       remoteName = os.path.join(datasetname,fname.replace('/',os.sep))
-      localName = os.path.join(self.localCashFolder,remoteName)
+      localName = os.path.join(self.localCacheFolder,remoteName)
       downloaded = os.path.exists(localName)
       self.customFormFiles.setItem(i,0,qt.QTableWidgetItem())
       self.customFormFiles.item(i,0).setIcon(self.storedIcon if downloaded else self.downloadIcon)
@@ -298,10 +352,10 @@ class lapdMouseBrowserWindow(qt.QMainWindow):
       self.customFormFiles.setItem(i,2,qt.QTableWidgetItem(self.hrSize(fsize)))
   
   def listFilesForDataset(self,datasetname):
-    remoteFolderContent = SharedGDriveUtils(self.remoteFolderId).listDirectory(datasetname, 0)
+    remoteFolderContent = lapdMouseDBUtil(self.remoteFolderUrl).listDirectory(datasetname, 0)
     files = [f for f in remoteFolderContent if not f['isFolder']]
     filenames = [f['name'] for f in files]
-    localDatasetDirectory = os.path.join(self.localCashFolder,datasetname)
+    localDatasetDirectory = os.path.join(self.localCacheFolder,datasetname)
     if os.path.exists(localDatasetDirectory):
       localFiles = [f for f in os.listdir(localDatasetDirectory) if \
         (os.path.isfile(os.path.join(localDatasetDirectory,f)) and \
@@ -314,7 +368,8 @@ class lapdMouseBrowserWindow(qt.QMainWindow):
   
   def onDownloadDataset(self):
     datasetId = self.getSelectedId()
-    if datasetId==-1: return
+    if datasetId==-1:
+      return
     datasetname = self.datasets[datasetId]
     selectedFiles = []
     defaultFiles = ['AutofluorescentSub4.mha','AerosolNormalizedSub4.mha', \
@@ -332,7 +387,8 @@ class lapdMouseBrowserWindow(qt.QMainWindow):
     
   def onDownloadSelectedDataset(self):
     datasetId = self.getSelectedId()
-    if datasetId==-1: return
+    if datasetId==-1:
+      return
     datasetname = self.datasets[datasetId]
     files = self.getSelectedFiles()
     self.downloadFiles(datasetname, files)
@@ -340,7 +396,8 @@ class lapdMouseBrowserWindow(qt.QMainWindow):
     
   def onDeleteSelectedDataset(self):
     datasetId = self.getSelectedId()
-    if datasetId==-1: return
+    if datasetId==-1:
+      return
     datasetname = self.datasets[datasetId]
     files = self.getSelectedFiles()
     self.deleteFiles(datasetname, files)
@@ -350,8 +407,9 @@ class lapdMouseBrowserWindow(qt.QMainWindow):
     if askForConfirmation:
       filestats = self.listFilesForDataset(datasetname)
       filesToDownload = [f for f in filestats if f['name'] in files and \
-        not os.path.exists(os.path.join(self.localCashFolder,datasetname,f['name']))]
-      if len(filesToDownload)==0: return True
+        not os.path.exists(os.path.join(self.localCacheFolder,datasetname,f['name']))]
+      if len(filesToDownload)==0:
+        return True
       s = 'Downloading '+str(len(filesToDownload))+' file(s) with '+\
         self.hrSize(sum(f['size'] for f in filesToDownload))+'.'+\
         ' This could take some time. Do you want to continue?'
@@ -364,33 +422,35 @@ class lapdMouseBrowserWindow(qt.QMainWindow):
     pd.setMinimumDuration(0)
     pd.show()
     slicer.app.processEvents()
-    for f in files:   
-      if pd.wasCanceled: break
+    for f in files:
+      if pd.wasCanceled:
+        break
       pd.setValue(files.index(f)+1)
       slicer.app.processEvents()   
       remoteName = os.path.join(datasetname,f.replace('/',os.sep))
-      localName = os.path.join(self.localCashFolder,remoteName)
+      localName = os.path.join(self.localCacheFolder,remoteName)
       if not os.path.exists(localName):
-        print 'downloading '+remoteName
+        print('downloading '+remoteName)
         try:
-          SharedGDriveUtils(self.remoteFolderId).downloadFile(remoteName, localName)
+          lapdMouseDBUtil(self.remoteFolderUrl).downloadFile(remoteName, localName)
         except:
-          print 'error downloading file: '
-          print sys.exc_info()[0]
+          print('error downloading file: ')
+          print(sys.exc_info()[0])
     pd.setValue(len(files)+2)
     return True
     
   def deleteFiles(self, datasetname, files):
     for f in files:
       remoteName = os.path.join(datasetname,f.replace('/',os.sep))
-      localName = os.path.join(self.localCashFolder,remoteName)
+      localName = os.path.join(self.localCacheFolder,remoteName)
       if os.path.exists(localName):
-        print "deleting file "+localName
+        print("deleting file "+localName)
         os.remove(localName)
       
   def onLoadDataset(self):
     datasetId = self.getSelectedId()
-    if datasetId==-1: return
+    if datasetId==-1:
+      return
     datasetname = self.datasets[datasetId]
     selectedFiles = []
     defaultFiles = ['AutofluorescentSub4.mha','AerosolNormalizedSub4.mha', \
@@ -405,7 +465,8 @@ class lapdMouseBrowserWindow(qt.QMainWindow):
   
   def onLoadSelectedDataset(self):
     datasetId = self.getSelectedId()
-    if datasetId==-1: return
+    if datasetId==-1:
+      return
     datasetname = self.datasets[datasetId]
     files = self.getSelectedFiles()
     if self.downloadFiles(datasetname, files):
@@ -419,62 +480,79 @@ class lapdMouseBrowserWindow(qt.QMainWindow):
     pd.show()
     slicer.app.processEvents()
     for f in files:
-      if pd.wasCanceled: break
+      if pd.wasCanceled:
+        break
       pd.setValue(files.index(f)+1)
       slicer.app.processEvents()
       remoteName = os.path.join(datasetname,f.replace('/',os.sep))
-      localName = os.path.join(self.localCashFolder,remoteName)
-      if not os.path.exists(localName): continue
+      localName = os.path.join(self.localCacheFolder,remoteName)
+      if not os.path.exists(localName):
+        continue
       try:
-        print 'loading '+localName 
+        print('loading '+localName)
         self.loadFile(localName)
       except:
-        print 'error loading file: '
-        print sys.exc_info()[0]
+        print('error loading file: ')
+        print(sys.exc_info()[0])
     pd.setValue(len(files)+2)
     pd.hide()
   
   def loadFile(self, filename):
     lapdMouseDBBrowser.loadColorTables()
     name, extension = os.path.splitext(filename)
-    if extension=='.mha': self.loadVolume(filename)
-    elif extension=='.nrrd': self.loadLabelmap(filename)
-    elif extension=='.vtk': self.loadMesh(filename)
-    elif extension=='.meta': self.loadTree(filename)
-    elif extension=='.csv': self.loadMeasurements(filename)
+    if extension=='.mha':
+      self.loadVolume(filename)
+    elif extension=='.nrrd':
+      self.loadLabelmap(filename)
+    elif extension=='.vtk':
+      self.loadMesh(filename)
+    elif extension=='.meta':
+      self.loadTree(filename)
+    elif extension=='.csv':
+      self.loadMeasurements(filename)
     else:
-      print 'Warning: can\'t load: '+filename
-    
+      print('Warning: can\'t load: '+filename)
+
+
+  # .mha  
   def loadVolume(self, filename):
     slicer.util.loadVolume(filename)
     
     name = os.path.splitext(os.path.basename(filename))[0]
-    nodes = slicer.util.getNodes(name+'*')
-    node = nodes.values()[len(nodes.values())-1]
+    nodes = slicer.util.getNodes(name+'*') # Returns OrderedDict
+    nodeKey = next(reversed(nodes)) # Get last node
+    node = nodes[nodeKey] # Get id of last node
     
     node.CreateDefaultDisplayNodes()
     nd = node.GetDisplayNode()
     
     if (str(os.path.basename(filename)).find('Aerosol')!=-1):
       colorLUT = slicer.util.getFirstNodeByClassByName('vtkMRMLColorTableNode','Red')
-      if colorLUT: nd.SetAndObserveColorNodeID(colorLUT.GetID())
+      if colorLUT:
+        nd.SetAndObserveColorNodeID(colorLUT.GetID())
       nd.SetAutoWindowLevel(False)
-      if (str(os.path.basename(filename)).find('Normalized')!=-1): nd.SetWindowLevel(10,5)
-      else: nd.SetWindowLevel(1000,500)
+      if (str(os.path.basename(filename)).find('Normalized')!=-1):
+        nd.SetWindowLevel(10,5)
+      else:
+        nd.SetWindowLevel(1000,500)
       
     if (str(os.path.basename(filename)).find('Autofluorescent')!=-1):
       colorLUT = slicer.util.getFirstNodeByClassByName('vtkMRMLColorTableNode','Green')
-      if colorLUT: nd.SetAndObserveColorNodeID(colorLUT.GetID())
+      if colorLUT:
+        nd.SetAndObserveColorNodeID(colorLUT.GetID())
       nd.SetAutoWindowLevel(False)
       nd.SetWindowLevel(3000,1500)
-  
+
+
+ # .nrrd 
   def loadLabelmap(self, filename):
     self.turnLabelmapsToOutline()
     slicer.util.loadLabelVolume(filename)
     
     name = os.path.splitext(os.path.basename(filename))[0]
-    nodes = slicer.util.getNodes(name+'*')
-    node = nodes.values()[len(nodes.values())-1]
+    nodes = slicer.util.getNodes(name+'*') # Returns OrderedDict
+    nodeKey = next(reversed(nodes)) # Get last node
+    node = nodes[nodeKey] # Get id of last node
     
     colorLUT = None
     if (str(os.path.basename(filename)).find('Lobes.nrrd')!=-1):
@@ -485,6 +563,7 @@ class lapdMouseBrowserWindow(qt.QMainWindow):
       nd=node.GetDisplayNode()
       nd.SetAndObserveColorNodeID(colorLUT.GetID())
   
+  # Sets and hides a transform
   def getTransformNode(self):
     if len(slicer.util.getNodes('ras2lps*'))>0:
       transformNode = slicer.util.getNode('ras2lps*')
@@ -499,50 +578,53 @@ class lapdMouseBrowserWindow(qt.QMainWindow):
       transformNode.SetMatrixTransformToParent(t.GetMatrix())
       slicer.mrmlScene.AddNode(transformNode)
     return transformNode
-    
+
+  # .vtk  
   def loadMesh(self, filename):
     slicer.util.loadModel(filename)
     name = os.path.splitext(os.path.basename(filename))[0]
-    nodes = slicer.util.getNodes(name+'*')
-    node = nodes.values()[len(nodes.values())-1]
-    
-    # specify transform
-    transformNode = self.getTransformNode()
-    node.SetAndObserveTransformNodeID(transformNode.GetID())
+    nodes = slicer.util.getNodes(name+'*') # Returns OrderedDict
+    nodeKey = next(reversed(nodes)) # Get last node
+    node = nodes[nodeKey] # Get id of last node
     
     node.CreateDefaultDisplayNodes()
     nd = node.GetDisplayNode()
     if node.GetPolyData().GetPointData().GetNumberOfArrays()>0:
       nd.SetActiveScalarName(node.GetPolyData().GetPointData().GetArrayName(0))
     
-    if (str(os.path.basename(filename)).find('AirwayWallDeposition')!=-1):   
+    if (str(os.path.basename(filename)).find('AirwayWallDeposition')!=-1): 
       colorLUT = slicer.util.getFirstNodeByClassByName('vtkMRMLColorTableNode','Warm1')
-      if colorLUT: nd.SetAndObserveColorNodeID(colorLUT.GetID())
+      if colorLUT:
+        nd.SetAndObserveColorNodeID(colorLUT.GetID())
       nd.SetScalarRangeFlag(slicer.vtkMRMLDisplayNode.UseManualScalarRange)
       nd.SetAutoScalarRange(False)
       nd.SetScalarRange(0,10)
     
-    if (str(os.path.basename(filename)).find('AirwayWall.vtk')!=-1):      
+    if (str(os.path.basename(filename)).find('AirwayWall.vtk')!=-1):    
       colorLUT = slicer.util.getFirstNodeByClassByName('vtkMRMLColorTableNode','BlueRed')
-      if colorLUT: nd.SetAndObserveColorNodeID(colorLUT.GetID())
+      if colorLUT:
+        nd.SetAndObserveColorNodeID(colorLUT.GetID())
       nd.SetScalarRangeFlag(slicer.vtkMRMLDisplayNode.UseManualScalarRange)
       nd.SetAutoScalarRange(False)
       nd.SetScalarRange(0,1)
     
     if (str(os.path.basename(filename)).find('AirwaySegments')!=-1):
       colorLUT = slicer.util.getFirstNodeByClassByName('vtkMRMLColorTableNode','lapdMouseSegments')
-      if colorLUT: nd.SetAndObserveColorNodeID(colorLUT.GetID())
+      if colorLUT:
+        nd.SetAndObserveColorNodeID(colorLUT.GetID())
       nd.SetScalarRangeFlag(slicer.vtkMRMLDisplayNode.UseColorNodeScalarRange)
     
     if (str(os.path.basename(filename)).find('AirwayOutlets')!=-1):
       colorLUT = slicer.util.getFirstNodeByClassByName('vtkMRMLColorTableNode','lapdMouseOutlets')
-      if colorLUT: nd.SetAndObserveColorNodeID(colorLUT.GetID())
+      if colorLUT:
+        nd.SetAndObserveColorNodeID(colorLUT.GetID())
       nd.SetScalarRangeFlag(slicer.vtkMRMLDisplayNode.UseColorNodeScalarRange)
       
     nd.SetScalarVisibility(True)
     nd.BackfaceCullingOff()
-    nd.SetSliceIntersectionVisibility(True)
+    nd.SetVisibility2D(True)
   
+  # .meta
   def loadTree(self, filename):
     import lapdMouseVisualizer
     logic = lapdMouseVisualizer.lapdMouseVisualizerLogic()
@@ -562,12 +644,15 @@ class lapdMouseBrowserWindow(qt.QMainWindow):
       display = model.GetDisplayNode()
       display.SetActiveScalarName('BranchLabel')
       colorLUT = slicer.util.getFirstNodeByClassByName('vtkMRMLColorTableNode','Rainbow')
-      if colorLUT: display.SetAndObserveColorNodeID(colorLUT.GetID())
-      
+      if colorLUT:
+        display.SetAndObserveColorNodeID(colorLUT.GetID())
+
+  # .csv    
   def loadMeasurements(self, filename):
     import lapdMouseVisualizer
     success = slicer.util.loadNodeFromFile(filename, 'TableFile')
-    if not success: return
+    if not success:
+      return
     measurementsTable = slicer.util.getNodesByClass('vtkMRMLTableNode')[-1]
     logic = lapdMouseVisualizer.lapdMouseVisualizerLogic()
     measurementsType = logic.getType(measurementsTable)
@@ -585,10 +670,14 @@ class lapdMouseBrowserWindow(qt.QMainWindow):
     
     # change color
     display = model.GetDisplayNode()
-    if measurementsType=='tree': display.SetActiveScalarName('BranchLabel')
-    else: display.SetActiveScalarName('MeasurementMean')
+    if measurementsType=='tree':
+      display.SetActiveScalarName('BranchLabel')
+    else:
+      display.SetActiveScalarName('MeasurementMean')
+      display.SetOpacity(0.2)
     colorLUT = slicer.util.getFirstNodeByClassByName('vtkMRMLColorTableNode','Rainbow')
-    if colorLUT: display.SetAndObserveColorNodeID(colorLUT.GetID())
+    if colorLUT:
+      display.SetAndObserveColorNodeID(colorLUT.GetID())
     
   def turnLabelmapsToOutline(self):
     layoutManager = slicer.app.layoutManager()
@@ -596,12 +685,15 @@ class lapdMouseBrowserWindow(qt.QMainWindow):
       layoutManager.sliceWidget(sliceViewName).sliceController().showLabelOutline(True)
       
   def hrSize(self, bytes):
-    if not bytes: return ''
+    if not bytes:
+      return ''
     bytes = float(bytes)
     KB = bytes/1024
-    if KB<1024: return "%.1f KB" % KB
+    if KB<1024:
+      return "%.1f KB" % KB
     MB = KB/1024
-    if MB<1024: return "%.1f MB" % MB
+    if MB<1024:
+      return "%.1f MB" % MB
     GB = MB/1024
     return "%.1f GB" % GB
 
@@ -619,7 +711,7 @@ class lapdMouseDBBrowser(ScriptedLoadableModule):
     self.parent.title = "lapdMouseDBBrowser"
     self.parent.categories = ["lapdMouse"]
     self.parent.dependencies = []
-    self.parent.contributors = ["Christian Bauer (Univeristy of Iowa)"] # replace with "Firstname Lastname (Organization)"
+    self.parent.contributors = ["Christian Bauer (Univeristy of Iowa), Melissa Krueger (University of Washington)"] # replace with "Firstname Lastname (Organization)"
     self.parent.helpText = """
     Tool for accessing and viewing data from the of lapdMouse project data archive. For more details, visit the
     <a href="https://doi.org/10.25820/9arg-9w56">lapdMouse project</a>.
@@ -637,7 +729,8 @@ class lapdMouseDBBrowser(ScriptedLoadableModule):
     
   @staticmethod
   def setupLobesColorTable():
-    if len(slicer.util.getNodes('lapdMouseLobes'))>0: return
+    if len(slicer.util.getNodes('lapdMouseLobes'))>0:
+      return
     colors = slicer.vtkMRMLColorTableNode()
     colors.SetTypeToUser()
     colors.SetAttribute("Category", "lapdMouse")
@@ -653,10 +746,12 @@ class lapdMouseDBBrowser(ScriptedLoadableModule):
     colors.SetColor(4,'right caudal lobe',1,1,0,1)
     colors.SetColor(5,'right accessory lobe',0,1,1,1)
     slicer.mrmlScene.AddNode(colors)
+
     
   @staticmethod
   def setupSegmentsColorTable():
-    if len(slicer.util.getNodes('lapdMouseSegments'))>0: return
+    if len(slicer.util.getNodes('lapdMouseSegments'))>0:
+      return
     numSegments = 5000
     colors = slicer.vtkMRMLColorTableNode()
     colors.SetTypeToUser()
@@ -675,7 +770,8 @@ class lapdMouseDBBrowser(ScriptedLoadableModule):
   
   @staticmethod
   def setupOutletsColorTable():
-    if len(slicer.util.getNodes('lapdMouseOutlets'))>0: return
+    if len(slicer.util.getNodes('lapdMouseOutlets'))>0:
+      return
     numSegments = 5000
     colors = slicer.vtkMRMLColorTableNode()
     colors.SetTypeToUser()
@@ -711,7 +807,7 @@ class lapdMouseDBBrowserWidget(ScriptedLoadableModuleWidget):
     databaseDirectory = settings.value("lapdMouseDBBrowserLocalCacheFolder")
     
     self.browserWindow = lapdMouseBrowserWindow()
-    self.browserWindow.localCashFolder = databaseDirectory
+    self.browserWindow.localCacheFolder = databaseDirectory
     self.browserWindow.load()
     self.browserWindow.show()
 
@@ -741,7 +837,7 @@ class lapdMouseDBBrowserWidget(ScriptedLoadableModuleWidget):
     settingsGridLayout = qt.QGridLayout(settingsCollapsibleButton)
     settingsCollapsibleButton.collapsed = False
     
-    self.storagePath = self.browserWindow.localCashFolder
+    self.storagePath = self.browserWindow.localCacheFolder
     storagePathLabel = qt.QLabel("Storage Folder: ")
     self.storagePathButton = ctk.ctkDirectoryButton()
     self.storagePathButton.directory = self.storagePath
@@ -753,10 +849,10 @@ class lapdMouseDBBrowserWidget(ScriptedLoadableModuleWidget):
     self.layout.addStretch(1)
   
   def onStorageChanged(self):
-    self.browserWindow.localCashFolder = self.storagePathButton.directory
+    self.browserWindow.localCacheFolder = self.storagePathButton.directory
     self.browserWindow.load()
     settings = qt.QSettings() 
-    settings.setValue("lapdMouseDBBrowserLocalCacheFolder", self.browserWindow.localCashFolder)
+    settings.setValue("lapdMouseDBBrowserLocalCacheFolder", self.browserWindow.localCacheFolder)
     settings.sync()
 
 #

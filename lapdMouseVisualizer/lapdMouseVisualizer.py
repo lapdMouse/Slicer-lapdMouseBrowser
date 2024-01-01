@@ -17,10 +17,10 @@ class lapdMouseVisualizer(ScriptedLoadableModule):
 
   def __init__(self, parent):
     ScriptedLoadableModule.__init__(self, parent)
-    self.parent.title = "lapdMouseVisualizer" # TODO make this more human readable by adding spaces
+    self.parent.title = "lapdMouseVisualizer"
     self.parent.categories = ["lapdMouse"]
     self.parent.dependencies = []
-    self.parent.contributors = ["Christian Bauer (Univeristy of Iowa)"] # replace with "Firstname Lastname (Organization)"
+    self.parent.contributors = ["Christian Bauer (Univeristy of Iowa) and Melissa Krueger (University of Washington)"] # replace with "Firstname Lastname (Organization)"
     self.parent.helpText = """
     Visualize tree structures (*.meta) and compartment measurements (*.csv) from the lapdMouse project as mesh models.
     For more details, visit the <a href="https://lapdmouse.iibi.uiowa.edu">lapdMouse project</a>.
@@ -90,13 +90,13 @@ class lapdMouseVisualizerWidget(ScriptedLoadableModuleWidget):
     # Layout within the dummy collapsible button
     measurementsFormLayout = qt.QFormLayout(measurementsCollapsibleButton)
     
-    # input meta file selector
+    # input csv file selector
     self.measurementsInputSelector = ctk.ctkPathLineEdit()
     self.measurementsInputSelector.nameFilters = ["Compartment Measurement table (*.csv)"]
     self.measurementsInputSelector.setToolTip("Select the *.csv file containing the compartment measurements.")
     measurementsFormLayout.addRow("Input measurements file: ", self.measurementsInputSelector)
     
-    # input meta file selector
+    # input csv file selector
     self.measurementsInputTableSelector = slicer.qMRMLNodeComboBox()
     self.measurementsInputTableSelector.nodeTypes = ["vtkMRMLTableNode"]
     self.measurementsInputTableSelector.selectNodeUponCreation = True
@@ -149,8 +149,15 @@ class lapdMouseVisualizerWidget(ScriptedLoadableModuleWidget):
     model.CreateDefaultDisplayNodes()
     display = model.GetDisplayNode()
     display.SetActiveScalarName('BranchLabel')
+
+    # specify transform  
+    transformNode = self.logic.getTransformNode()
+    model.SetAndObserveTransformNodeID(transformNode.GetID())
+    slicer.mrmlScene.AddNode(model)
+
     colorLUT = slicer.util.getFirstNodeByClassByName('vtkMRMLColorTableNode','Rainbow')
-    if colorLUT: display.SetAndObserveColorNodeID(colorLUT.GetID())
+    if colorLUT:
+      display.SetAndObserveColorNodeID(colorLUT.GetID())
     
   def onMeasurementsApply(self):
     filename = self.measurementsInputSelector.currentPath
@@ -178,10 +185,20 @@ class lapdMouseVisualizerWidget(ScriptedLoadableModuleWidget):
       return
     model.CreateDefaultDisplayNodes()
     display = model.GetDisplayNode()
-    if tableType=='tree': display.SetActiveScalarName('BranchLabel')
-    else: display.SetActiveScalarName('MeasurementMean')
+    if tableType=='tree':
+      display.SetActiveScalarName('BranchLabel')
+    else:
+      display.SetActiveScalarName('MeasurementMean')
+      display.SetOpacity(0.2)
+
+    # specify transform  
+    transformNode = self.logic.getTransformNode()
+    model.SetAndObserveTransformNodeID(transformNode.GetID())
+    slicer.mrmlScene.AddNode(model)
+
     colorLUT = slicer.util.getFirstNodeByClassByName('vtkMRMLColorTableNode','Rainbow')
-    if colorLUT: display.SetAndObserveColorNodeID(colorLUT.GetID())
+    if colorLUT:
+      display.SetAndObserveColorNodeID(colorLUT.GetID())
 
 #
 # lapdMouseVisualizerSelectionLogic
@@ -197,7 +214,7 @@ class lapdMouseVisualizerLogic(ScriptedLoadableModuleLogic):
     for line in open(filename,'r+'):
       line = line.rstrip('\n')
       if tube is not None:
-        if readNPoints>0: 
+        if readNPoints>0:
           tokens = [float(x) for x in line.split(' ')[0:-1]]
           tube['Coordinates'].append(tokens[0:3])
           tube['Radius'].append(tokens[3])
@@ -205,10 +222,14 @@ class lapdMouseVisualizerLogic(ScriptedLoadableModuleLogic):
           readNPoints = readNPoints-1
           if readNPoints==0:
             tree[tube['ID']] = tube
-        if line.startswith('ID = '): tube['ID'] = int(line[len('ID = '):])
-        if line.startswith('ParentID = '): tube['ParentID'] = int(line[len('ParentID = '):])
-        if line.startswith('Name = '): tube['Name'] =(line[len('Name = '):])
-        if line.startswith('NPoints = '): tube['NPoints'] = int(line[len('NPoints = '):])
+        if line.startswith('ID = '):
+          tube['ID'] = int(line[len('ID = '):])
+        if line.startswith('ParentID = '):
+          tube['ParentID'] = int(line[len('ParentID = '):])
+        if line.startswith('Name = '):
+          tube['Name'] =(line[len('Name = '):])
+        if line.startswith('NPoints = '):
+          tube['NPoints'] = int(line[len('NPoints = '):])
         if line.startswith('Points = '):
           readNPoints = tube['NPoints']
           tube['Coordinates'] = []
@@ -228,8 +249,25 @@ class lapdMouseVisualizerLogic(ScriptedLoadableModuleLogic):
           parent['ChildIDs'] = [tube['ID']]
     
     return tree
+  
+  # Sets and hides a transform
+  def getTransformNode(self):
+    if len(slicer.util.getNodes('ras2lps*'))>0:
+      transformNode = slicer.util.getNode('ras2lps*')
+    else:
+      transformNode = slicer.vtkMRMLLinearTransformNode()
+      transformNode.SetScene(slicer.mrmlScene)
+      transformNode.HideFromEditorsOn()
+      transformNode.SetName("ras2lps")
+      t = vtk.vtkTransform()
+      t.Identity()
+      t.Scale([-1, -1, 1])
+      transformNode.SetMatrixTransformToParent(t.GetMatrix())
+      slicer.mrmlScene.AddNode(transformNode)
+    return transformNode
+
     
-  def tree2Mesh(self, tree):
+  def tree2Mesh(self, tree): 
     # convert tree structure to mesh representation
     # each airway segment is visualized as a cylinder
     # label values for labled branches are assigned
@@ -303,8 +341,8 @@ class lapdMouseVisualizerLogic(ScriptedLoadableModuleLogic):
     # the table node is assumed to contain columns:
     # (volume, mean, centroidX, centroidY, centroidZ)
     table = tableNode.GetTable()
-    requiredColumns = set(['volume', 'mean', 'centroidX', 'centroidY', 'centroidZ'])
-    tableColumns = set([table.GetColumnName(i) for i in range(table.GetNumberOfColumns())])
+    requiredColumns = {'volume', 'mean', 'centroidX', 'centroidY', 'centroidZ'}
+    tableColumns = {table.GetColumnName(i) for i in range(table.GetNumberOfColumns())}
     if not requiredColumns.issubset(set(tableColumns)): # not a valid measurements table
       return vtk.vtkPolyData()
     appendFilter = vtk.vtkAppendPolyData()  
@@ -327,8 +365,8 @@ class lapdMouseVisualizerLogic(ScriptedLoadableModuleLogic):
     # the table node is assumed to contain columns:
     # (volume, mean, centroidX, centroidY, centroidZ)
     table = tableNode.GetTable()
-    requiredColumns = set(['area', 'mean', 'centroidX', 'centroidY', 'centroidZ'])
-    tableColumns = set([table.GetColumnName(i) for i in range(table.GetNumberOfColumns())])
+    requiredColumns = {'area', 'mean', 'centroidX', 'centroidY', 'centroidZ'}
+    tableColumns = {table.GetColumnName(i) for i in range(table.GetNumberOfColumns())}
     if not requiredColumns.issubset(set(tableColumns)): # not a valid measurements table
       return vtk.vtkPolyData()
     appendFilter = vtk.vtkAppendPolyData()  
@@ -421,13 +459,13 @@ class lapdMouseVisualizerLogic(ScriptedLoadableModuleLogic):
 
   def getType(self, tableNode):
     table = tableNode.GetTable()
-    tableColumns = set([table.GetColumnName(i) for i in range(table.GetNumberOfColumns())])
+    tableColumns = {table.GetColumnName(i) for i in range(table.GetNumberOfColumns())}
     types = {
-      'volumeMeasurements': set(['volume', 'mean', 'centroidX', 'centroidY', 'centroidZ']),
-      'areaMeasurements': set(['area', 'mean', 'centroidX', 'centroidY', 'centroidZ']),
-      'tree': set(['length', 'radius', 'centroidX', 'centroidY', 'centroidZ', 'directionX', 'directionY', 'directionZ']),
+      'volumeMeasurements': {'volume', 'mean', 'centroidX', 'centroidY', 'centroidZ'},
+      'areaMeasurements': {'area', 'mean', 'centroidX', 'centroidY', 'centroidZ'},
+      'tree': {'length', 'radius', 'centroidX', 'centroidY', 'centroidZ', 'directionX', 'directionY', 'directionZ'},
     }
-    for key, value in types.iteritems():
+    for key, value in types.items():
       if value.issubset(tableColumns):
         return key
     return None
@@ -470,12 +508,13 @@ class lapdMouseVisualizerTest(ScriptedLoadableModuleTest):
     self._internalTest()
     self.delayDisplay('Test passed!')
   
-  def _internalTest():
+  def _internalTest(self):
     # test loading of measurements file
     logic = lapdMouseVisualizerLogic()
-    measurementsFile = '/home/christian/data/R01_lapdmousetest/m01/geometry_measurements.csv'   
+    measurementsFile =  os.path.join(os.path.expanduser("~"),\
+                                     'Documents/data/lapdMouseTest/test/test_LobesDeposition.csv')
     slicer.util.loadNodeFromFile(measurementsFile, 'TableFile')
-    measurementsTable = slicer.util.getFirstNodeByClassByName('vtkMRMLTableNode','geometry_measurements')
+    measurementsTable = slicer.util.getFirstNodeByClassByName('vtkMRMLTableNode','test_LobesDeposition')
     model = logic.measurementsTable2Model(measurementsTable)
     model.SetScene(slicer.mrmlScene)
     model.CreateDefaultDisplayNodes()
@@ -484,9 +523,10 @@ class lapdMouseVisualizerTest(ScriptedLoadableModuleTest):
     # test loading of measurements file
     
     logic = lapdMouseVisualizerLogic()
-    treeFilename = '/home/christian/data/R01_lapdmousetest/m01/m01_AirwayTree.meta'
-    tree = logic.readMetaTree(treeFilename)    
-    modelHierarchy = slicer.vtkMRMLModelHierarchyNode()    
+    treeFilename =  os.path.join(os.path.expanduser("~"),\
+                                 'Documents/data/lapdMouseTest/test/test_AirwayTree.meta')
+    tree = logic.readMetaTree(treeFilename)   
+    modelHierarchy = slicer.vtkMRMLModelHierarchyNode()
     model = logic.tree2Model(tree)
     model.SetScene(slicer.mrmlScene)
     model.CreateDefaultDisplayNodes()
