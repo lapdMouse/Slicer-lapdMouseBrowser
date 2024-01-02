@@ -201,7 +201,7 @@ class lapdMouseBrowserWindow(qt.QMainWindow):
     self.isEditing = False
     self.datasets = []
     self.remoteFolderUrl = 'https://cebs-ext.niehs.nih.gov/cahs/file/download/lapd/'
-    self.localCacheFolder = os.path.join(os.path.expanduser("~"),'Documents','data','lapdMouseTest')
+    self.localCacheFolder = os.path.join(os.path.expanduser("~"),'lapdMouse')
     self.projectURL='https://lapdmouse.iibi.uiowa.edu' # TODO: Change this?
     self.setupWindow()
 
@@ -802,7 +802,7 @@ class lapdMouseDBBrowserWidget(ScriptedLoadableModuleWidget):
     
     settings = qt.QSettings()
     if settings.value("lapdMouseDBBrowserLocalCacheFolder", "")=="":
-      settings.setValue("lapdMouseDBBrowserLocalCacheFolder", "./lapdMouse")
+      settings.setValue("lapdMouseDBBrowserLocalCacheFolder", os.path.join(os.path.expanduser("~"),'lapdMouse'))
       settings.sync()
     databaseDirectory = settings.value("lapdMouseDBBrowserLocalCacheFolder")
     
