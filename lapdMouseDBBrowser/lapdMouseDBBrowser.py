@@ -70,7 +70,7 @@ class lapdMouseDBUtil():
   def _listFolderRemote(self,dirname,depth=0):
     # Read file with file names and metadata
     try:
-      with open(os.path.join(self.modulePath,'allfiles.json')) as infile:
+      with open(os.path.join(self.modulePath,'Resources','allfiles.json')) as infile:
         data = infile.read()
       allcontent = json.loads(data)
     except:

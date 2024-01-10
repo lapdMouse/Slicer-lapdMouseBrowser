@@ -8,6 +8,7 @@ set(MODULE_PYTHON_SCRIPTS
 
 set(MODULE_PYTHON_RESOURCES
   Resources/Icons/${MODULE_NAME}.png
+  Resources/allfiles.json
   Resources/Icons/download.png
   Resources/Icons/stored.png
   )
