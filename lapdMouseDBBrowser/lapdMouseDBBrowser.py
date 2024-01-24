@@ -202,7 +202,8 @@ class lapdMouseBrowserWindow(qt.QMainWindow):
     self.datasets = []
     self.remoteFolderUrl = 'https://cebs-ext.niehs.nih.gov/cahs/file/download/lapd/'
     self.localCacheFolder = os.path.join(os.path.expanduser("~"),'lapdMouse')
-    self.projectURL='https://lapdmouse.iibi.uiowa.edu' # TODO: Change this?
+    self.projectUrl='https://cebs-ext.niehs.nih.gov/cahs/report/lapd/web-download-links/MzNhZGRkZGY5ZWU2OGU1ODgwYWQ4NjA2Njg0M2Q1YzMK'
+    self.notesUrl='https://cebs-ext.niehs.nih.gov/cahs/file/lapd/pages/notes/'
     self.setupWindow()
 
   def setupWindow(self):
@@ -227,7 +228,9 @@ class lapdMouseBrowserWindow(qt.QMainWindow):
     self.bannerTextBrowser.setMaximumHeight(120)
     text = "<h1>lapdMouse Data Archive Browser</h1>"
     text += "The lapdMouse data archive contains anatomically derived lung models and aerosol deposition measurements of mice for modeling and computational toxicology in mice."
-    text += " For more details about available datasets, data representation, other software, and support, please visit the <a href=\"https://doi.org/10.25820/9arg-9w56\">lapdMouse archive</a>"
+    text += " For more details about available datasets, data representation, other software, and support, please visit the <a href=\""
+    text += self.projectUrl
+    text +="\">lapdMouse archive</a>"
     text += "<br />This work was supported in part by NIH project R01ES023863."    
     self.bannerTextBrowser.html=text
     self.banner.layout().addWidget(self.bannerTextBrowser,0,1)
@@ -247,7 +250,7 @@ class lapdMouseBrowserWindow(qt.QMainWindow):
     self.customFormName = qt.QLineEdit("",self.customForm)
     self.customFormName.readOnly = True
     self.customForm.layout().addRow("Name",self.customFormName)
-    self.customFormDatasetInfo = qt.QLabel('<a href=\"'+self.projectURL+'\">info</a>')
+    self.customFormDatasetInfo = qt.QLabel('<a href=\"'+self.projectUrl+'\">project info</a>')
     self.customFormDatasetInfo.setTextFormat(1)
     self.customFormDatasetInfo.setOpenExternalLinks(True)
     self.customForm.layout().addRow("Info",self.customFormDatasetInfo)    
@@ -334,9 +337,8 @@ class lapdMouseBrowserWindow(qt.QMainWindow):
       pass
     datasetname = self.datasets[datasetId]
     self.customFormName.text = datasetname
-    # TODO: Change this URL to PDF link or remove entirely
-    url = self.projectURL+'/ViewMD/index.html?src=../resources/db_info/'+datasetname+'_Info.md'
-    self.customFormDatasetInfo.text='<a href=\"'+url+'\">info</a>'
+    url = self.notesUrl+datasetname+'_notes.pdf'
+    self.customFormDatasetInfo.text = f'<a href="{url}">{datasetname}_notes.pdf</a>'
     datasetFiles = self.listFilesForDataset(datasetname)    
     self.customFormFiles.setRowCount(len(datasetFiles))
     for i in range(len(datasetFiles)):
