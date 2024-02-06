@@ -713,7 +713,7 @@ class lapdMouseDBBrowser(ScriptedLoadableModule):
     self.parent.title = "lapdMouseDBBrowser"
     self.parent.categories = ["lapdMouse"]
     self.parent.dependencies = []
-    self.parent.contributors = ["Christian Bauer (Univeristy of Iowa), Melissa Krueger (University of Washington)"] # replace with "Firstname Lastname (Organization)"
+    self.parent.contributors = ["Christian Bauer (University of Iowa), Melissa Krueger (University of Washington)"] # replace with "Firstname Lastname (Organization)"
     self.parent.helpText = """
     Tool for accessing and viewing data from the of lapdMouse project data archive. For more details, visit the
     <a href="https://doi.org/10.25820/9arg-9w56">lapdMouse project</a>.
