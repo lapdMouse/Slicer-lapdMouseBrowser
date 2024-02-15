@@ -166,5 +166,6 @@ This work was supported in part by NIH project R01ES023863.
 
 For support and further information please visit the
 "Lung anatomy + particle deposition (lapd) mouse archive"
-at <https://doi.org/10.25820/9arg-9w56>.
+at <https://doi.org/10.25820/9arg-9w56> or our data repository at
+[NIEHS](https://cebs-ext.niehs.nih.gov/cahs/report/lapd/web-download-links/MzNhZGRkZGY5ZWU2OGU1ODgwYWQ4NjA2Njg0M2Q1YzMK)
 

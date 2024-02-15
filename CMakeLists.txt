@@ -6,8 +6,8 @@ project(lapdMouseBrowser)
 # Extension meta-information
 
 set(EXTENSION_Name "lapdMouseBrowser")
-set(EXTENSION_HOMEPAGE "http://slicer.org/slicerWiki/index.php/Documentation/Nightly/Extensions/lapdMouseBrowser")
-set(EXTENSION_CATEGORY "Informatics")
+set(EXTENSION_HOMEPAGE "https://github.com/lapdMouse/Slicer-lapdMouseBrowser")
+Set(EXTENSION_CATEGORY "Informatics")
 set(EXTENSION_CONTRIBUTORS "Christian Bauer (University of Iowa), Melissa Krueger (University of Washington")
 set(EXTENSION_DESCRIPTION "Connect to the lapdMouse archive, browse the collection, download and visualize data files in 3D Slicer.")
 set(EXTENSION_ICONURL "https://raw.githubusercontent.com/lapdMouse/Slicer-lapdMouseBrowser/master/lapdMouseBrowser.png")
