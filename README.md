@@ -154,6 +154,16 @@ Then, in Section `Apply transform` move the models from `Transformable` to
 **lapdMouseDBBrowser** takes care of these steps automatically when loading
 models.
 
+## Reference
+
+  * Bauer C, Krueger M, Lamm WJE, Glenny RW, Beichel RR. [lapdMouse:
+    associating lung anatomy with local particle deposition in
+    mice.](https://www.ncbi.nlm.nih.gov/pubmed/31774357) _J Appl Physiol
+    (1985)_. 2020 Feb 01;128(2):309-323. doi:
+    [10.1152/japplphysiol.00615.2019](https://doi.org/10.1152/japplphysiol.00615.2019).
+    PMID: 31774357.
+
+
 ## License
 
 **lapdMouseBrowser** is distributed under [3-clause BSD license](License.txt).
