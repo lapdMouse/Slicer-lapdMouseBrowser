@@ -29,7 +29,7 @@ them in 3D Slicer. Advantages include:
     containing 34 sets of aerosol deposition and lung geometry
     information. It also keeps track of previously downloaded data.
   * **lapdMouseVisualizer**: [creates Slicer
-    models](#visualizationoffilesnotnativelysupportedby3dslicer) from
+    models](#visualization-of-files-not-natively-supported-by-3d-slicer) from
     our airway tree and aerosol deposition files.
 
 ## Installation
@@ -70,12 +70,12 @@ actions associated with a selected dataset.
 
 The following subsections will explain how to:
 
-  * [Specify a local storage folder](#specifyalocalstoragefolder)
-  * [Download and visualize a standard set of files](#downloadandvisualizeastandardsetoffiles)
-  * [Download and visualize a custom set of files](#downloadandvisualizeacustomsetoffiles)
+  * [Specify a local storage folder](#specify-a-local-storage-folder)
+  * [Download and visualize a standard set of files](#download-and-visualize-a-standard-set-of-files)
+  * [Download and visualize a custom set of files](#download-and-visualize-a-custom-set-of-files)
   * [Visualization of files not natively supported by 3D
-    Slicer](#visualizationoffilesnotnativelysupportedby3dslicer)
-  * [Introductory videos](#introductoryvideos)
+    Slicer](#visualization-of-files-not-natively-supported-by-3d-slicer)
+  * [Introductory videos](#introductory-videos)
 
 ### Specify a local storage folder
 
