@@ -25,7 +25,7 @@ them in 3D Slicer. Advantages include:
 **Included modules**:
 
   * **lapdMouseDBBrowser**: downloads files from our
-    [archive](https://cebs-ext.niehs.nih.gov/cahs/report/lapd/web-download-links/)
+    [archive](https://lapdmouse.iibi.uiowa.edu)
     containing 34 sets of aerosol deposition and lung geometry
     information. It also keeps track of previously downloaded data.
   * **lapdMouseVisualizer**: [creates Slicer
@@ -71,8 +71,10 @@ actions associated with a selected dataset.
 The following subsections will explain how to:
 
   * [Specify a local storage folder](#specify-a-local-storage-folder)
-  * [Download and visualize a standard set of files](#download-and-visualize-a-standard-set-of-files)
-  * [Download and visualize a custom set of files](#download-and-visualize-a-custom-set-of-files)
+  * [Download and visualize a standard set of
+    files](#download-and-visualize-a-standard-set-of-files) 
+  * [Download and visualize a custom set of
+    files](#download-and-visualize-a-custom-set-of-files)
   * [Visualization of files not natively supported by 3D
     Slicer](#visualization-of-files-not-natively-supported-by-3d-slicer)
   * [Introductory videos](#introductory-videos)
@@ -216,6 +218,6 @@ This work was supported in part by NIH project R01ES023863.
 
 For support and further information please visit the
 "Lung anatomy + particle deposition (lapd) mouse archive"
-at <https://doi.org/10.25820/9arg-9w56> or our [data repository at
-NIEHS](https://cebs-ext.niehs.nih.gov/cahs/report/lapd/web-download-links/)
+at <https://doi.org/10.25820/9arg-9w56> or our [data
+repository](https://lapdmouse.iibi.uiowa.edu)
 
