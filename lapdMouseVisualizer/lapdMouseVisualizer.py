@@ -23,7 +23,7 @@ class lapdMouseVisualizer(ScriptedLoadableModule):
     self.parent.contributors = ["Christian Bauer (University of Iowa) and Melissa Krueger (University of Washington)"] # replace with "Firstname Lastname (Organization)"
     self.parent.helpText = """
     Visualize tree structures (*.meta) and compartment measurements (*.csv) from the lapdMouse project as mesh models.
-    For more details, visit the <a href="https://cebs-ext.niehs.nih.gov/cahs/report/lapd/web-download-links/MzNhZGRkZGY5ZWU2OGU1ODgwYWQ4NjA2Njg0M2Q1YzMK">lapdMouse project</a>.
+    For more details, visit the <a href="https://cebs-ext.niehs.nih.gov/cahs/report/lapd/web-download-links/">lapdMouse project</a>.
     """
     self.parent.acknowledgementText = """
     This work was supported in part by NIH project R01ES023863.

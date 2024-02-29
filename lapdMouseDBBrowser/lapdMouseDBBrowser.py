@@ -202,7 +202,7 @@ class lapdMouseBrowserWindow(qt.QMainWindow):
     self.datasets = []
     self.remoteFolderUrl = 'https://cebs-ext.niehs.nih.gov/cahs/file/download/lapd/'
     self.localCacheFolder = os.path.join(os.path.expanduser("~"),'lapdMouse')
-    self.projectUrl='https://cebs-ext.niehs.nih.gov/cahs/report/lapd/web-download-links/MzNhZGRkZGY5ZWU2OGU1ODgwYWQ4NjA2Njg0M2Q1YzMK'
+    self.projectUrl='https://cebs-ext.niehs.nih.gov/cahs/report/lapd/web-download-links/'
     self.notesUrl='https://cebs-ext.niehs.nih.gov/cahs/file/lapd/pages/notes/'
     self.setupWindow()
 

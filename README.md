@@ -3,7 +3,7 @@
 **lapdMouseBrowser** is an extension for [3D
 Slicer](https://www.slicer.org) that downloads and visualizes files from
 the [Lung anatomy + particle deposition (lapd) mouse
-archive](https://cebs-ext.niehs.nih.gov/cahs/report/lapd/web-download-links/MzNhZGRkZGY5ZWU2OGU1ODgwYWQ4NjA2Njg0M2Q1YzMK)
+archive](https://cebs-ext.niehs.nih.gov/cahs/report/lapd/web-download-links)
 For more information about the lapdMouse project visit
 <https://doi.org/10.25820/9arg-9w56>. More specifically,
 **lapdMouseBrowser** allows the user to browse through the datasets in
@@ -25,7 +25,7 @@ them in 3D Slicer. Advantages include:
 **Included modules**:
 
   * **lapdMouseDBBrowser**: downloads files from our
-    [archive](https://cebs-ext.niehs.nih.gov/cahs/report/lapd/web-download-links/MzNhZGRkZGY5ZWU2OGU1ODgwYWQ4NjA2Njg0M2Q1YzMK)
+    [archive](https://cebs-ext.niehs.nih.gov/cahs/report/lapd/web-download-links/)
     containing 34 sets of aerosol deposition and lung geometry
     information. It also keeps track of previously downloaded data.
   * **lapdMouseVisualizer**: [creates Slicer
@@ -217,5 +217,5 @@ This work was supported in part by NIH project R01ES023863.
 For support and further information please visit the
 "Lung anatomy + particle deposition (lapd) mouse archive"
 at <https://doi.org/10.25820/9arg-9w56> or our [data repository at
-NIEHS](https://cebs-ext.niehs.nih.gov/cahs/report/lapd/web-download-links/MzNhZGRkZGY5ZWU2OGU1ODgwYWQ4NjA2Njg0M2Q1YzMK)
+NIEHS](https://cebs-ext.niehs.nih.gov/cahs/report/lapd/web-download-links/)
 
