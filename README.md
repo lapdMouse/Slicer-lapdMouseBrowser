@@ -25,7 +25,7 @@ them in 3D Slicer. Advantages include:
 **Included modules**:
 
   * **lapdMouseDBBrowser**: downloads files from our
-    [archive](https://lapdmouse.iibi.uiowa.edu)
+    [archive](https://cebs-ext.niehs.nih.gov/cahs/report/lapd/web-download-links/)
     containing 34 sets of aerosol deposition and lung geometry
     information. It also keeps track of previously downloaded data.
   * **lapdMouseVisualizer**: [creates Slicer
@@ -216,8 +216,7 @@ This work was supported in part by NIH project R01ES023863.
 
 ## Support
 
-For support and further information please visit the
+For further information please visit the
 "Lung anatomy + particle deposition (lapd) mouse archive"
 at <https://doi.org/10.25820/9arg-9w56> or our [data
-repository](https://lapdmouse.iibi.uiowa.edu)
-
+repository](https://cebs-ext.niehs.nih.gov/cahs/report/lapd/web-download-links/)
