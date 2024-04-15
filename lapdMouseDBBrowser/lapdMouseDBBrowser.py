@@ -429,7 +429,7 @@ class lapdMouseBrowserWindow(qt.QMainWindow):
       
     errMsg = []
     pd = qt.QProgressDialog('Downloading file(s)...', 'Cancel', 0, len(files)+2, slicer.util.mainWindow())
-    pd.setModal(False)
+    pd.setModal(True)
     pd.setMinimumDuration(0)
     pd.show()
     slicer.app.processEvents()
