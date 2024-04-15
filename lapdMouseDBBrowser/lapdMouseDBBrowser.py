@@ -426,7 +426,8 @@ class lapdMouseBrowserWindow(qt.QMainWindow):
       confirmDownload = qt.QMessageBox.question(self,'Download?', s, qt.QMessageBox.Yes, qt.QMessageBox.No)
       if confirmDownload!=qt.QMessageBox.Yes:
         return False
-        
+      
+    errMsg = []
     pd = qt.QProgressDialog('Downloading file(s)...', 'Cancel', 0, len(files)+2, slicer.util.mainWindow())
     pd.setModal(False)
     pd.setMinimumDuration(0)
@@ -445,9 +446,14 @@ class lapdMouseBrowserWindow(qt.QMainWindow):
         try:
           lapdMouseDBUtil(self.remoteFolderUrl).downloadFile(remoteName, localName)
         except:
+          errMsg.append(f)
           print('error downloading file: ')
           print(sys.exc_info()[0])
     pd.setValue(len(files)+2)
+    if len(errMsg) > 0:
+      qt.QMessageBox.information(self, 'Error!',
+                                 'Error(s) downloading files:\n\n' + '\n'.join(errMsg) +
+                                 '\n\nSee Python console for errors.\n')
     return True
     
   def deleteFiles(self, datasetname, files):
