@@ -6,7 +6,6 @@ import logging
 import json
 import sys
 import urllib
-import datetime
 import time, sys, ssl, urllib.request, urllib.error
 
 class lapdMouseDBUtil():
@@ -52,8 +51,15 @@ class lapdMouseDBUtil():
 
   def _downloadFileFromRemote(self, src, destination):
     requestUrl = self.gdriveURL + src
-    request = urllib.request.Request(requestUrl)
-    response = urllib.request.urlopen(request)
+    try:
+      request = urllib.request.Request(requestUrl)
+      response = urllib.request.urlopen(request)
+    except HTTPError as e:
+      print('Error code: ', e.code)
+      return False
+    except URLError as e:
+      print('Reason: ', e.reason)
+      return False
     self._downloadURLStreaming(response, destination)
 
   def _downloadURLStreaming(self,response,destination):
@@ -412,21 +418,24 @@ class lapdMouseBrowserWindow(qt.QMainWindow):
         not os.path.exists(os.path.join(self.localCacheFolder,datasetname,f['name']))]
       if len(filesToDownload)==0:
         return True
+      filesToDownload.sort(key=lambda f: f['size'])
+      files = [f['name'] for f in filesToDownload]
       s = 'Downloading '+str(len(filesToDownload))+' file(s) with '+\
         self.hrSize(sum(f['size'] for f in filesToDownload))+'.'+\
         ' This could take some time. Do you want to continue?'
       confirmDownload = qt.QMessageBox.question(self,'Download?', s, qt.QMessageBox.Yes, qt.QMessageBox.No)
       if confirmDownload!=qt.QMessageBox.Yes:
         return False
-    
+        
     pd = qt.QProgressDialog('Downloading file(s)...', 'Cancel', 0, len(files)+2, slicer.util.mainWindow())
-    pd.setModal(True)
+    pd.setModal(False)
     pd.setMinimumDuration(0)
     pd.show()
     slicer.app.processEvents()
     for f in files:
       if pd.wasCanceled:
         break
+      pd.setLabelText('Downloading: ' + f)
       pd.setValue(files.index(f)+1)
       slicer.app.processEvents()   
       remoteName = os.path.join(datasetname,f.replace('/',os.sep))
