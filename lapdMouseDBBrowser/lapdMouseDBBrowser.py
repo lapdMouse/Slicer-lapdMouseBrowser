@@ -182,7 +182,7 @@ def downloadItem(item, db):
       os.remove(realPath)
   t1 = time.time()
   downloadSucceeded = os.path.exists(realPath)
-  sys.stdout.write( ( '[DONE]' if downloadSucceeded else ' [ERROR]')+' time: '+time.strftime("%M:%S", time.gmtime(t1-t0))+'(mm:ss)\n')
+  sys.stdout.write( ( '[DONE]' if downloadSucceeded else '[ERROR]')+' time: '+time.strftime("%M:%S", time.gmtime(t1-t0))+'\n')
   if not downloadSucceeded:
     return 'ERROR: download failed for file: '+localName
   else:
@@ -438,22 +438,30 @@ class lapdMouseBrowserWindow(qt.QMainWindow):
         break
       pd.setLabelText('Downloading: ' + f)
       pd.setValue(files.index(f)+1)
-      slicer.app.processEvents()   
+      slicer.app.processEvents() 
       remoteName = os.path.join(datasetname,f.replace('/',os.sep))
       localName = os.path.join(self.localCacheFolder,remoteName)
       if not os.path.exists(localName):
-        print('downloading '+remoteName)
+        print('Downloading '+remoteName)
+        t0 = time.time()
         try:
           lapdMouseDBUtil(self.remoteFolderUrl).downloadFile(remoteName, localName)
         except:
           errMsg.append(f)
           print('error downloading file: ')
           print(sys.exc_info()[0])
+          if os.path.exists(localName) and os.path.isfile(localName):
+            os.remove(localName)
+      t1 = time.time()
+      downloadSucceeded = os.path.exists(localName)
+      print( ( '[DONE]' if downloadSucceeded else '[ERROR]')+' time: '+time.strftime("%M:%S", time.gmtime(t1-t0))+'\n')
+
     pd.setValue(len(files)+2)
     if len(errMsg) > 0:
       qt.QMessageBox.information(self, 'Error!',
                                  'Error(s) downloading files:\n\n' + '\n'.join(errMsg) +
                                  '\n\nSee Python console for errors.\n')
+      slicer.util.setPythonConsoleVisible(visible = True)
     return True
     
   def deleteFiles(self, datasetname, files):
@@ -499,6 +507,7 @@ class lapdMouseBrowserWindow(qt.QMainWindow):
     for f in files:
       if pd.wasCanceled:
         break
+      pd.setLabelText('Loading: ' + f)
       pd.setValue(files.index(f)+1)
       slicer.app.processEvents()
       remoteName = os.path.join(datasetname,f.replace('/',os.sep))
