@@ -54,11 +54,16 @@ class lapdMouseDBUtil():
     try:
       request = urllib.request.Request(requestUrl)
       response = urllib.request.urlopen(request)
-    except HTTPError as e:
-      print('Error code: ', e.code)
+    except urllib.error.HTTPError as e:
+      print('The server couldn\'t fulfill the request.')
+      print('Error code: ', e.code, flush=True)
       return False
-    except URLError as e:
-      print('Reason: ', e.reason)
+    except urllib.error.URLError as e:
+      print('We failed to reach a server.')
+      print('Reason: ', e.reason, flush=True)
+      return False
+    except:
+      print("Unexpected error:", sys.exc_info()[0])
       return False
     self._downloadURLStreaming(response, destination)
 
@@ -444,12 +449,8 @@ class lapdMouseBrowserWindow(qt.QMainWindow):
       if not os.path.exists(localName):
         print('Downloading '+remoteName)
         t0 = time.time()
-        try:
-          lapdMouseDBUtil(self.remoteFolderUrl).downloadFile(remoteName, localName)
-        except:
+        if not lapdMouseDBUtil(self.remoteFolderUrl).downloadFile(remoteName, localName):
           errMsg.append(f)
-          print('error downloading file: ')
-          print(sys.exc_info()[0])
           if os.path.exists(localName) and os.path.isfile(localName):
             os.remove(localName)
       t1 = time.time()
