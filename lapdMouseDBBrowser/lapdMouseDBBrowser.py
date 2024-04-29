@@ -57,14 +57,11 @@ class lapdMouseDBUtil():
     except urllib.error.HTTPError as e:
       print('The server couldn\'t fulfill the request.')
       print('Error code: ', e.code, flush=True)
-      return False
+      return
     except urllib.error.URLError as e:
       print('We failed to reach a server.')
       print('Reason: ', e.reason, flush=True)
-      return False
-    except:
-      print("Unexpected error:", sys.exc_info()[0])
-      return False
+      return
     self._downloadURLStreaming(response, destination)
 
   def _downloadURLStreaming(self,response,destination):
@@ -444,18 +441,19 @@ class lapdMouseBrowserWindow(qt.QMainWindow):
       pd.setLabelText('Downloading: ' + f)
       pd.setValue(files.index(f)+1)
       slicer.app.processEvents() 
-      remoteName = os.path.join(datasetname,f.replace('/',os.sep))
-      localName = os.path.join(self.localCacheFolder,remoteName)
+      remoteName = datasetname + '/' + f
+      localName = os.path.normpath(os.path.join(self.localCacheFolder,remoteName))
       if not os.path.exists(localName):
         print('Downloading '+remoteName)
         t0 = time.time()
-        if not lapdMouseDBUtil(self.remoteFolderUrl).downloadFile(remoteName, localName):
+        lapdMouseDBUtil(self.remoteFolderUrl).downloadFile(remoteName, localName)
+        t1 = time.time()
+        downloadSucceeded = os.path.exists(localName)
+        print( ( '[DONE]' if downloadSucceeded else '[ERROR]')+' time: '+time.strftime("%M:%S", time.gmtime(t1-t0))+'\n')
+        if not downloadSucceeded:
           errMsg.append(f)
-          if os.path.exists(localName) and os.path.isfile(localName):
+          if os.path.exists(localName):
             os.remove(localName)
-      t1 = time.time()
-      downloadSucceeded = os.path.exists(localName)
-      print( ( '[DONE]' if downloadSucceeded else '[ERROR]')+' time: '+time.strftime("%M:%S", time.gmtime(t1-t0))+'\n')
 
     pd.setValue(len(files)+2)
     if len(errMsg) > 0:
@@ -836,7 +834,6 @@ class lapdMouseDBBrowserWidget(ScriptedLoadableModuleWidget):
     self.browserWindow.localCacheFolder = databaseDirectory
     self.browserWindow.load()
     self.browserWindow.show()
-
     self.logic = lapdMouseDBBrowserLogic()
 
     # Instantiate and connect widgets ...
