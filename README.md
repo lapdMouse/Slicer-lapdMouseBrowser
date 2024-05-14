@@ -166,37 +166,6 @@ find these videos helpful in getting started.
      **lapdMouseDBBrowser** and **lapdMouseVisualizer** modules and the
      various types of data files and visualizations.
 
-## Note on 3D Slicer's coordinate systems
-One of the issues while dealing with volumetric images and derived models are
-the differences between the coordinate systems. See
-https://slicer.readthedocs.io/en/latest/user_guide/coordinate_systems.html
-for an explanation.
-
-All lapdMouse data (images, meshes, tree structure, etc.) were generated with
-[Insight Segmentation and Registration Toolkit](https://itk.org) (ITK) and use
-an **LPS** coordinate system.
-
-3D Slicer however, loads raster images assuming an LPS coordinate system
-and models assuming an RAS coordinate system; see [Slicer File
-Formats](https://slicer.readthedocs.io/en/latest/user_guide/data_loading_and_saving.html).
-As a result, when loading images and meshes via 3D Slicer's `Add data`,
-they seem to not match. To fix this manually, one needs to transform
-either the images or the models. After loading the datasets, go to
-Slicer's `Transforms` module, and select from `Active Transform` `Create
-new Linear Transform`. Specify the `Transformation Matrix` to flip the
-data in the first two dimensions:
-
-    -1  0  0  0
-     0 -1  0  0
-     0  0  1  0
-     0  0  0  1
-
-Then, in Section `Apply transform` move the models from `Transformable` to
-`Transformed`. Then loaded images and models are aligned.
-
-**lapdMouseDBBrowser** takes care of these steps automatically when loading
-models.
-
 ## Reference
 
   * Bauer C, Krueger M, Lamm WJE, Glenny RW, Beichel RR. [lapdMouse:
