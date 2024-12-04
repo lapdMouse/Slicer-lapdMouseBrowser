@@ -5,13 +5,17 @@ project(lapdMouseBrowser)
 #-----------------------------------------------------------------------------
 # Extension meta-information
 
-set(EXTENSION_Name "lapdMouseBrowser")
-set(EXTENSION_HOMEPAGE "https://github.com/lapdMouse/Slicer-lapdMouseBrowser")
+set(EXTENSION_NAME "lapdMouseBrowser")
+set(EXTENSION_HOMEPAGE "https://github.com/lapdMouse/Slicer-lapdMouseBrowser#readme")
 Set(EXTENSION_CATEGORY "Informatics")
-set(EXTENSION_CONTRIBUTORS "Christian Bauer (University of Iowa), Melissa Krueger (University of Washington")
+set(EXTENSION_CONTRIBUTORS "Christian Bauer (University of Iowa), Reinhard Beichel (University of Iowa), Melissa Krueger (University of Washington), Robb Glenny (University of Washington)")
 set(EXTENSION_DESCRIPTION "Connect to the lapdMouse archive, browse the collection, download and visualize data files in 3D Slicer.")
 set(EXTENSION_ICONURL "https://raw.githubusercontent.com/lapdMouse/Slicer-lapdMouseBrowser/master/lapdMouseBrowser.png")
-set(EXTENSION_SCREENSHOTURLS "https://raw.githubusercontent.com/lapdMouse/Slicer-lapdMouseBrowser/master/Screenshots/LapdMouseDBBrowserWindow.png https://raw.githubusercontent.com/lapdMouse/Slicer-lapdMouseBrowser/master/Screenshots/LapdMouseStandardFiles.png https://raw.githubusercontent.com/lapdMouse/Slicer-lapdMouseBrowser/master/Screenshots/LapdMouseNearAciniTree.png")
+set(EXTENSION_SCREENSHOTURLS
+  "https://raw.githubusercontent.com/lapdMouse/Slicer-lapdMouseBrowser/master/Screenshots/LapdMouseDBBrowserWindow.png"
+  "https://raw.githubusercontent.com/lapdMouse/Slicer-lapdMouseBrowser/master/Screenshots/LapdMouseStandardFiles.png"
+  "https://raw.githubusercontent.com/lapdMouse/Slicer-lapdMouseBrowser/master/Screenshots/LapdMouseNearAciniTree.png"
+)
 set(EXTENSION_DEPENDS "NA") # Specified as a space separated string, a list or 'NA' if any
 
 #-----------------------------------------------------------------------------
